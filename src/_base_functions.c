@@ -7,7 +7,7 @@ unsigned int set_mask(int index) { return 1u << (index % 32); }
 // bit - от 0 до 95
 unsigned int get_bit(s21_decimal val, int bit) {
   unsigned int mask = set_mask(bit);
-  return (val.bits[bit / 32] & mask) != 0;
+  return (val.bits[bit / 32] & mask) != 0; //МОЖЕМ УБРАТЬ УСЛОВИЕ???????
 }
 
 void set_bit(s21_decimal *dec, int bit, int value) {
