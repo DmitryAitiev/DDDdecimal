@@ -1,29 +1,53 @@
 #include "s21_decimal.h"
 
 int s21_sub(s21_decimal value_1, s21_decimal value_2, s21_decimal *result) {
-  int return_code;
-  _rescale(&value_1, &value_2);
-  s21_decimal_alt alt_value_1 = _convert_std_to_alt(value_1);
-  s21_decimal_alt alt_value_2 = _convert_std_to_alt(value_2);
-  s21_decimal_alt alt_result;
-  _null_decimal_alt(&alt_result);
-  if (alt_value_1.sign == alt_value_2.sign) {
-    if ((s21_is_greater_or_equal(value_1, value_2) && !alt_value_1.sign) ||
-        (s21_is_less_or_equal(value_1, value_2) && alt_value_1.sign)) {
-      return_code = _sub_alt(alt_value_1, alt_value_2, &alt_result);
-    } else {
-      alt_value_1.sign = !alt_value_1.sign;
-      alt_value_2.sign = !alt_value_2.sign;
-      return_code = _sub_alt(alt_value_2, alt_value_1, &alt_result);
+  int error=0;
+    int sign1=extractBitSign(value_1);
+    int sign2=extractBitSign(value_2);  
+    unsigned int sign=0;  
+    
+
+    nullify(result);
+    s21_big_decimal big1, big2, resbig, buffer;
+    nullifyb(&big1);nullifyb(&big2);nullifyb(&resbig);nullifyb(&buffer);
+    int scale=normalize(value_1, value_2, &big1, &big2);
+    if(sign1==sign2){
+        sign=(unsigned int)sign1;
+        if((tsuboika_is_greater(value_2, value_1))){
+            
+    buffer=big1;
+    big1=big2;
+    big2=buffer;
+    sign^=1u; //обращаем знак  
+    mysubb(big1, big2, &resbig); 
+    mybig_to_decimal(resbig, result, scale, sign);
     }
-    alt_result.sign = alt_value_1.sign;
-  } else {
-    alt_value_2.sign = !alt_value_2.sign;
-    value_2 = _convert_alt_to_std(alt_value_2);
-    return_code = s21_add(value_1, value_2, result);
-    alt_result = _convert_std_to_alt(*result);
-  }
-  alt_result.exp = alt_value_1.exp;
-  *result = _convert_alt_to_std(alt_result);
-  return return_code;
+    
+    else{
+         mysubb(big1, big2, &resbig); 
+         if(tsuboika_is_equal(value_1, value_2)) sign=0;
+    mybig_to_decimal(resbig, result, scale, sign);
+    }
+    
+    }
+    if(sign1>sign2){
+        // if((tsuboika_is_greater(value_2, value_1))){
+            setSign(&value_2, 1);
+          error=s21_add(value_2, value_1, result);
+           // setSign(result, 1);
+                
+      //  }
+          return error;  }
+    if(sign2>sign1){   
+       // sign=0;
+       
+        setSign(&value_2, 0);
+
+       
+        s21_add(value_1, value_2, result);
+        
+        return error;
+    
+    }
+ return error;
 }

@@ -1,52 +1,36 @@
 #include "s21_decimal.h"
 
-int s21_from_float_to_decimal(float src, s21_decimal *dst) {
-  s21_conversion_result code = S21_CONVERSION_OK;
-  if (!dst) {
-    code = S21_CONVERSION_ERROR;
-  } else if (src == 0.0) {
-    code = S21_CONVERSION_OK;
-    *dst = s21_decimal_get_zero();
-    if (signbit(src) != 0) {
-      s21_decimal_set_sign(dst, S21_NEGATIVE);
-    }
-  } else if (isinf(src) || isnan(src)) {
-    code = S21_CONVERSION_ERROR;
-    *dst = s21_decimal_get_inf();
-    if (signbit(src) != 0) {
-      s21_decimal_set_sign(dst, S21_NEGATIVE);
-    }
-  } else if (fabsf(src) > MAX_FLOAT_TO_CONVERT) {
-    code = S21_CONVERSION_ERROR;
-    *dst = s21_decimal_get_inf();
-    if (signbit(src) != 0) {
-      s21_decimal_set_sign(dst, S21_NEGATIVE);
-    }
-  } else if (fabsf(src) < MIN_FLOAT_TO_CONVERT) {
-    code = S21_CONVERSION_ERROR;
-    *dst = s21_decimal_get_zero();
-  } else {
-    *dst = s21_decimal_get_zero();
-    s21_decimal result;
-    char flt[64];
+int s21_from_float_to_decimal(float src, s21_decimal *dst){
+int code=0;
+if (!dst) code = 1;
+nullify(dst);
+if(src < 0)
+  dst->bits[3] = 0b10000000000001100000000000000000;
+else dst->bits[3] = 0b00000000000001100000000000000000;
+float FP, lp;
+src=fabs(src);
+lp=modff(src, &FP);
+long double fp=(long double)FP, result= fp*pow(10,6)+lp*pow(10,6);
 
-    sprintf(flt, "%.6E", fabsf(src));
-    int exp = s21_get_float_exp_from_string(flt);
-    if (exp <= -23) {
-      int float_precision = exp + 28;
-      sprintf(flt, "%.*E", float_precision, fabsf(src));
-    }
-
-    // Переводим строку с научной нотацией в decimal
-    result = s21_float_string_to_decimal(flt);
-
-    // Определяем знак результата, исходя из знака числа src (типа float)
-    if (signbit(src) != 0) {
-      s21_decimal_set_sign(&result, S21_NEGATIVE);
-    }
-
-    *dst = result;
+for(int i = 95; i >= 64; i--){
+  if (result/ pow(2,i) > 1){
+  dst->bits[2] = dst->bits[2] |  0b00000000000000000000000000000001 << i;
+  result -= pow(2, i);
   }
+}
 
-  return code;
+for(int i = 63; i >= 32; i--){
+  if (result/ pow(2,i) > 1){
+  dst->bits[1] = dst->bits[1] |  0b00000000000000000000000000000001 << i;
+  result -= pow(2, i);
+  }
+}
+
+for(int i = 31; i >= 0; i--){
+  if (result/ pow(2,i) > 1){
+  dst->bits[0] = dst->bits[0] |  0b00000000000000000000000000000001 << i;
+  result -= pow(2, i); 
+  }
+}
+return code;
 }

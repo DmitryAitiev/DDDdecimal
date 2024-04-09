@@ -1,11 +1,54 @@
 #include "s21_decimal.h"
 
-bool _get_bit_int(unsigned int num, int pos) { return (num >> pos) & 1; }
+//bool _get_bit_int(unsigned int num, int pos) { return (num >> pos) & 1; }
+
+int _get_bit_int(unsigned int value, int bit_number) {
+  return value & (1 << bit_number);
+}
 
 // сдвиг вправо для альтернативного децимала
-void _right_shift(s21_decimal_alt *alt) {
-  for (int i = 0; i < 191; i++) alt->bits[i] = alt->bits[i + 1];
-  alt->bits[191] = 0;
+
+s21_big_decimal mantissadecimalToBig(s21_decimal value) {
+  s21_big_decimal result;
+  initializeByBigZeros(&result);
+  for (int i = 0; i < 3; i++) {
+    result.bits[i] = value.bits[i];
+  }
+  return result;
+}
+
+void set_bit_int(unsigned int *value, int bit_number, int set_value) {
+  if (set_value) {
+    *value |= (1 << bit_number);
+  } else {
+    *value = *value & ~(1 << bit_number);
+  }
+}
+
+void add_one(s21_decimal *value) { 
+  s21_decimal one = {{1}};
+
+  s21_sum(value, one);
+}
+
+void initializeByBigZeros(s21_big_decimal *value) {
+  (*value).bits[0] = 0;
+  (*value).bits[1] = 0;
+  (*value).bits[2] = 0;
+  (*value).bits[3] = 0;
+  (*value).bits[4] = 0;
+  (*value).bits[5] = 0;
+}
+
+bool get_bit_value(s21_decimal target, int bit_number) {
+  int index = 0;
+  while (bit_number >= 32) {
+    index++;
+    bit_number -= 32;
+  }
+
+  bool x = 1 << bit_number & target.bits[index];
+  return x;
 }
 
 /**
@@ -13,20 +56,74 @@ void _right_shift(s21_decimal_alt *alt) {
  * нужно при умножении
  */
 
-void _left_shift(s21_decimal_alt *alt) {
-  for (int i = 191; i > 0; i--) alt->bits[i] = alt->bits[i - 1];
-  alt->bits[0] = 0;
+int myshiftleft(s21_big_decimal* d, int value) {
+  int error = 0;
+  if (value != 0) {
+    unsigned int overflow = 0;
+    unsigned int memory = 0;
+    for (int i = 0; i <= 5; i++) {
+      memory = d->bits[i];
+      d->bits[i] <<= value;
+      d->bits[i] |= overflow;
+      overflow = memory >> (32 - value);
+    }
+    if (overflow > 0) error = 1;
+  }
+  return error;
+}
+
+int myshiftlefts(s21_decimal* d, int value) {
+  int error = 0;
+  unsigned int overflow = 0;
+  unsigned int memory = 0;
+  if (value > 0) {
+    for (int i = 0; i < 3; i++) {
+      memory = (unsigned int)d->bits[i];
+      d->bits[i] <<= value;
+      d->bits[i] |= overflow;
+      overflow = memory >> (32 - value);
+    }
+  }
+  if (overflow > 0) error = 1;
+  return error;
+}
+
+void myshiftright(s21_big_decimal* d, int value) {
+  unsigned int overflow = 0;
+  unsigned int memory = 0;
+  for (int i = 5; i >= 0; i--) {
+    memory = d->bits[i];
+    d->bits[i] >>= value;
+    d->bits[i] |= overflow;
+    overflow = memory << (32 - value);
+  }
+}
+
+void nullify(s21_decimal *d) {
+  d->bits[0] = 0u;
+  d->bits[1] = 0u;
+  d->bits[2] = 0u;
+  d->bits[3] = 0u;
+}
+
+void nullifyb(s21_big_decimal *d) {
+  d->bits[0] = 0u;
+  d->bits[1] = 0u;
+  d->bits[2] = 0u;
+  d->bits[3] = 0u;
+  d->bits[4] = 0u;
+  d->bits[5] = 0u;
 }
 
 bool _get_sign_std(s21_decimal dec) { return _get_bit_int(dec.bits[3], 31); }
 
 int _get_exp_std(s21_decimal dec) { return (dec.bits[3] % 2147483648) >> 16; }
 
-void _null_decimal_alt(s21_decimal_alt *alt) {
-  alt->sign = 0;
-  alt->exp = 0;
-  for (int i = 0; i < 192; i++) alt->bits[i] = 0;
+int extractBitSign(s21_decimal number) {
+  int result = (number.bits[3] & (1u << 31)) != 0;
+  return result;
 }
+
 
 void _init_decimal(s21_decimal *decimal) {
   for (int i = 0; i < 4; i++) {
@@ -41,31 +138,6 @@ void _init_decimal(s21_decimal *decimal) {
  * 0 если второе число больше первого
  */
 
-bool _compare_bits(s21_decimal_alt alt1, s21_decimal_alt alt2) {
-  int i = 191;
-  while (i >= 0 && alt1.bits[i] == alt2.bits[i]) {
-    i--;
-  }
-  return i == -1 ? 1 : alt1.bits[i];
-}
-
-// равен ли альтернативный децимал 0
-bool _is_null(s21_decimal_alt alt) {
-  bool result = 0;
-  for (int i = 0; i < 192; i++) result += alt.bits[i];
-  return !result;
-}
-
-// где находится самый левый единичный бит?
-int _last_bit(s21_decimal_alt alt) {
-  int i = -1;
-  if (!_is_null(alt)) {
-    for (i = 191; i >= 0; i--)
-      if (alt.bits[i] == 1) break;
-  }
-  return i;
-}
-
 /**
  * "выравнивание" чисел
  * нужно в делении
@@ -73,23 +145,7 @@ int _last_bit(s21_decimal_alt alt) {
  * но 1001 и 11 в 1001 и 110
  * по совершенно непонятным мне причинам не работает с div_by_ten
  */
-void _align(s21_decimal_alt *alt_value_1, s21_decimal_alt *alt_value_2) {
-  if (!_is_null(*alt_value_1) && !_is_null(*alt_value_2)) {
-    int l1 = _last_bit(*alt_value_1);
-    int l2 = _last_bit(*alt_value_2);
-    while (_last_bit(*alt_value_1) != _last_bit(*alt_value_2))
-      if (_compare_bits(*alt_value_1, *alt_value_2))
-        _left_shift(alt_value_2);
-      else
-        _left_shift(alt_value_1);
-    if (!_compare_bits(*alt_value_1, *alt_value_2)) _left_shift(alt_value_1);
-    if (alt_value_1->bits[0] == 0 && alt_value_2->bits[0] == 0 &&
-        _last_bit(*alt_value_1) > l1 && _last_bit(*alt_value_2) > l2) {
-      _right_shift(alt_value_1);
-      _right_shift(alt_value_2);
-    }
-  }
-}
+
 
 // Степени числа 10
 static const s21_decimal all_ten_pows[39] = {
@@ -159,42 +215,42 @@ s21_decimal s21_decimal_get_inf(void) {
   return result;
 }
 
-s21_decimal s21_float_string_to_decimal(char *str) {
-  int digits_counter = 6;
-  s21_decimal result = s21_decimal_get_zero();
-  char *ptr = str;
-
-  int exp = s21_get_float_exp_from_string(str);
-
-  while (*ptr) {
-    if (*ptr == '.') {
-      ++ptr;
-      continue;
-    } else if (*ptr >= '0' && *ptr <= '9') {
-      s21_decimal tmp = s21_decimal_get_zero();
-      s21_mul(s21_decimal_get_from_char(*ptr),
-              s21_int128_get_ten_pow(digits_counter), &tmp);
-      s21_add(result, tmp, &result);
-      --digits_counter;
-      ++ptr;
-    } else {
-      break;
-    }
-  }
-  exp = exp - 6;
-
-  if (exp > 0) {
-    s21_mul(result, s21_int128_get_ten_pow(exp), &result);
-  } else if (exp < 0) {
-    if (exp < -28) {
-      s21_div(result, s21_int128_get_ten_pow(28), &result);
-      exp += 28;
-    }
-    s21_div(result, s21_int128_get_ten_pow(-exp), &result);
-  }
-
-  return result;
-}
+//s21_decimal s21_float_string_to_decimal(char *str) {
+//  int digits_counter = 6;
+//  s21_decimal result = s21_decimal_get_zero();
+//  char *ptr = str;
+//
+//  int exp = s21_get_float_exp_from_string(str);
+//
+//  while (*ptr) {
+//    if (*ptr == '.') {
+//      ++ptr;
+//      continue;
+//    } else if (*ptr >= '0' && *ptr <= '9') {
+//      s21_decimal tmp = s21_decimal_get_zero();
+//      s21_mul(s21_decimal_get_from_char(*ptr),
+//              s21_int128_get_ten_pow(digits_counter), &tmp);
+//      s21_add(result, tmp, &result);
+//      --digits_counter;
+//      ++ptr;
+//    } else {
+//      break;
+//    }
+//  }
+//  exp = exp - 6;
+//
+//  if (exp > 0) {
+//    s21_mul(result, s21_int128_get_ten_pow(exp), &result);
+//  } else if (exp < 0) {
+//    if (exp < -28) {
+//      s21_div(result, s21_int128_get_ten_pow(28), &result);
+//      exp += 28;
+//    }
+//    s21_div(result, s21_int128_get_ten_pow(-exp), &result);
+//  }
+//
+//  return result;
+//}
 
 s21_decimal s21_decimal_get_from_char(char c) {
   s21_decimal result;
@@ -296,18 +352,6 @@ int s21_decimal_is_set_bit(s21_decimal decimal, int index) {
 
 int s21_is_set_bit(int number, int index) { return !!(number & (1U << index)); }
 
-void s21_decimal_set_sign(s21_decimal *decimal, int sign) {
-  decimal_bit3 bits3;
-  bits3.i = decimal->bits[3];
-  if (sign == S21_POSITIVE) {
-    bits3.parts.sign = S21_POSITIVE;
-  } else {
-    bits3.parts.sign = S21_NEGATIVE;
-  }
-
-  decimal->bits[3] = bits3.i;
-}
-
 s21_decimal s21_decimal_get_int_max(void) {
   // MAX_INT = 2147483647
   s21_decimal result = {{0x7FFFFFFF, 0x0, 0x0, 0x0}};
@@ -328,4 +372,91 @@ int s21_get_float_exp_from_string(char *str) {
   }
 
   return result;
+}
+
+int mybig_to_decimal(s21_big_decimal big, s21_decimal *decimal, int scale, unsigned int sign){
+    nullify(decimal);
+    int error=0;
+    if((check_345_b(big)>0&&scale>0)||scale>28){
+        int mod=div_by_tenb(&big);
+        scale--;
+        _bank_rounding(&big, decimal, mod, &scale, sign);
+    }
+    int wtf=check_345_b(big);
+    if(wtf>0){
+       error=(sign==1)?2:1;
+        return error;}
+for(int i=0;i<3;i++){
+    decimal->bits[i]=big.bits[i];
+}
+decimal->bits[3]|=scale<<16;
+setSign(decimal, sign);
+return error;
+}
+
+int check_345_b(s21_big_decimal big) {
+  int result = 0;
+  if (big.bits[3] > 0 || big.bits[4] > 0 || big.bits[5] > 0) {
+    result = 1;
+  }
+  return result;
+}
+
+int tsuboika_is_greater(s21_decimal dec1, s21_decimal dec2) {
+  int res = 0;
+  s21_big_decimal big1, big2;
+  nullifyb(&big1);nullifyb(&big2);
+  if (!s21_decimal_is_zero(dec1) && !s21_decimal_is_zero(dec2)) {
+    if (retrieveBit(dec1, 127) < retrieveBit(dec2, 127)) {
+      res = 1;
+    } else if (retrieveBit(dec1, 127) > retrieveBit(dec2, 127)) {
+      res = 0;
+    } else {
+      normalize(dec1, dec2, &big1, &big2);
+      for (int i = 191; i >= 0; --i) {
+        if (getBigBit(big1, i) > getBigBit(big2, i)) {
+          
+            res = 1;
+          
+          break;
+        } else if (getBigBit(big1, i) < getBigBit(big2, i)) {
+          
+            res = 0;
+          
+          break;
+        }
+      }
+    }
+  }
+  if(!s21_decimal_is_zero(dec1)&&s21_decimal_is_zero(dec2)){
+res =1;
+  }
+  return res;
+}
+
+int tsuboika_is_equal(s21_decimal dec1, s21_decimal dec2) {
+  int res = 0;
+  s21_big_decimal big1, big2;
+  nullifyb(&big1);nullifyb(&big2);
+  normalize(dec1, dec2, &big1, &big2);
+  if (big1.bits[0] == big2.bits[0] && big1.bits[1] == big2.bits[1] && big1.bits[2] == big2.bits[2] && big1.bits[3] == big2.bits[3] && big1.bits[4] == big2.bits[4]&& big1.bits[5] == big2.bits[5]) {
+    res = 1;
+  }
+  return res;
+}
+
+int retrieveBit(s21_decimal number, int bit) {
+  return (number.bits[bit / 32] & (1u << (bit % 32))) != 0;
+}
+
+int getBigBit(s21_big_decimal value, int index) {
+  int bits_index = index / 32;
+  int int_index = 31 - index % 32;
+  int bit = -1;
+  if (index > -1 && index < 192) {
+    value.bits[bits_index] = value.bits[bits_index] << int_index;
+    value.bits[bits_index] = value.bits[bits_index] >> 31;
+    bit = value.bits[bits_index] == 0 ? 0 : 1;
+  }
+  return bit;
 }

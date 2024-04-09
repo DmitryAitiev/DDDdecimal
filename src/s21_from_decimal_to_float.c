@@ -1,41 +1,27 @@
 #include "s21_decimal.h"
 
-int s21_from_decimal_to_float(s21_decimal src, float *dst) {
-  s21_conversion_result code = S21_CONVERSION_OK;
-  if (!dst) {
-    code = S21_CONVERSION_ERROR;
-  } else if (!s21_is_correct_decimal(src)) {
-    code = S21_CONVERSION_ERROR;
-    *dst = 0.0;
-  } else if (s21_is_equal(src, s21_decimal_get_zero())) {
-    int sign = s21_decimal_get_sign(src);
-    if (sign == S21_NEGATIVE) {
-      *dst = -0.0;
-    } else {
-      *dst = 0.0;
-    }
-    code = S21_CONVERSION_OK;
-  } else {
-    *dst = 0.0;
-    double tmp = 0.0;
-    int sign = s21_decimal_get_sign(src);
-    int power = s21_decimal_get_power(src);
+int s21_from_decimal_to_float(s21_decimal src, float *dst){
+  int code =0, scale=get_scale(src);
+if (scale>6) code=1;
+long double result;
 
-    for (int i = 0; i < MAX_BLOCK_NUMBER; i++) {
-      if (s21_decimal_is_set_bit(src, i) != 0) {
-        tmp += pow(2.0, i);
-      }
-    }
+for(int i = 95; i >= 64; i--){
+  if (_get_bit_int(i, 2))
+ result += pow(2, i);
+}
 
-    double powerten = pow(10, power);
-    tmp /= powerten;
+for(int i = 63; i >= 32; i--){
+  if (_get_bit_int(i, 1))
+ result += pow(2, i);
+}
 
-    if (sign == S21_NEGATIVE) {
-      tmp *= -1.0;
-    }
+for(int i = 31; i >= 0; i--){
+  if (_get_bit_int(i, 0))
+ result += pow(2, i);
+}
 
-    *dst = (float)tmp;
-  }
-
-  return code;
+float res=(float)result/pow(10,scale);
+if (get_sign(src)) res=res*(-1);
+*dst = res;
+return code;
 }
