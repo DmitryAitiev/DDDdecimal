@@ -16,9 +16,9 @@ for(int i = 95; i >= 64; i--){
  result += pow(2, i);
 }
 
-float res=(float)result/pow(10,scale);
+double res = result/pow(10,scale);
 if (get_sign(src)) res=res*(-1);
-*dst = res;
+*dst = (float)res;
 return code;
 }
 
