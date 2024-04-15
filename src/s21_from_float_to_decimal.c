@@ -2,7 +2,9 @@
 
 int s21_from_float_to_decimal(float src, s21_decimal *dst){
 int code=0;
-if (!dst) code = 1;
+if (!dst || fabs(src) > 79228162514264337593543950335.0) {
+    code = 1;
+  }
 nullify(dst);
 if(src < 0)
   dst->bits[3] = 0b10000000000001100000000000000000;

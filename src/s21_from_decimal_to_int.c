@@ -1,6 +1,7 @@
 #include "s21_decimal.h"
 
 int s21_from_decimal_to_int(s21_decimal src, int *dst) {
+  s21_truncate(src, &src);
   int code = 0;
   int result = 0;
   if (src.bits[1] > 0 || src.bits[2] > 0 || src.bits[0] > 2147483647) {
