@@ -42,7 +42,7 @@ void test_from_decimal_to_float(s21_decimal decimal, int check) {
   float_cast_test cast_result;
   cast_result.f = result;
 
-  ck_assert_int_eq(cast_result.f, check);
+  ck_assert_int_eq(cast_result.int32_bytes, check);
   ck_assert_int_eq(code, TEST_CONVERSION_OK);
 }
 
@@ -1584,7 +1584,7 @@ int main(void) {
   tcase_add_test(tc1_1, test_from_int_to_decimal_ok9);
   tcase_add_test(tc1_1, test_from_int_to_decimal_ok10);
 
-  srunner_run_all(sr, CK_ENV);
+  srunner_run_all(sr, CK_VERBOSE);
   nf = srunner_ntests_failed(sr);
   srunner_free(sr);
 
@@ -1595,7 +1595,7 @@ int main(void) {
     SRunner *srunner;
     srunner = srunner_create(decimal_tests[i]);
     srunner_set_fork_status(srunner, CK_NOFORK);
-    srunner_run_all(srunner, CK_NORMAL);
+    srunner_run_all(srunner, CK_VERBOSE);
     nf += srunner_ntests_failed(srunner);
     srunner_free(srunner);
   }
