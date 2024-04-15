@@ -16,10 +16,9 @@ for(int i = 95; i >= 64; i--){
  result += pow(2, i);
 }
 
-float res=(float)result/pow(10,scale);
-if (get_sign(src)) 
-  res=res*(-1);
-*dst = res;
+double res = result/pow(10,scale); // Была потеря точности, потому что кастовали во флоат прежде деления
+if (get_sign(src)) res=res*(-1);
+*dst = (float)res;
 return code;
 }
 
