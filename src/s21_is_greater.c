@@ -15,11 +15,12 @@ int s21_is_greater(s21_decimal mem1, s21_decimal mem2) {  // ИСПРАВИТЬ 
         break;
       }
     }
-    if (sign1) res = ~res;
+    if (sign1&&res) res =0 ;
   } else if (sign1 > sign2)
     res = 0;
   else if (sign1 < sign2)
   res = 1;
+  if (res&&(get_scale(mem1)!=get_scale(mem2))) res=0; 
   return res;
 }
 
@@ -41,10 +42,14 @@ int s21_is_equal(s21_decimal mem1, s21_decimal mem2) {
   nullifyb(&big1);
   nullifyb(&big2);
   normalize(mem1, mem2, &big1, &big2);
-  for (int i = 191; i >= 0; i--) {
-    if (get_bit_value(mem1, i) != get_bit_value(mem2, i)) res *= 0;
+
+  if ((get_sign(mem1)==get_sign(mem2))&&(get_scale(mem1)==get_scale(mem2))){
+      for (int i = 191; i >= 0; i--) {
+    if (get_bit_valueb(big1, i) != get_bit_valueb(big2, i)) res *= 0;
   }
   return res;
+  }
+return 0;
 }
 
 int s21_is_not_equal(s21_decimal mem1, s21_decimal mem2) {
@@ -53,8 +58,11 @@ int s21_is_not_equal(s21_decimal mem1, s21_decimal mem2) {
   nullifyb(&big1);
   nullifyb(&big2);
   normalize(mem1, mem2, &big1, &big2);
-  for (int i = 192; i > 0; i--) {
-    if (get_bit_value(mem1, i) == get_bit_value(mem2, i)) res *= 0;
+ if (get_sign(mem1)==get_sign(mem2)){
+for (int i = 191; i >= 0; i--) {
+    if (get_bit_valueb(big1, i) == get_bit_valueb(big2, i)) res *= 0;
   }
+ }
+ if (res&&(get_scale(mem1)!=get_scale(mem2))) res=0; 
   return res;
 }
