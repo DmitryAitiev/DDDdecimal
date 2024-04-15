@@ -42,7 +42,7 @@ void test_from_decimal_to_float(s21_decimal decimal, int check) {
   float_cast_test cast_result;
   cast_result.f = result;
 
-  ck_assert_int_eq(cast_result.int32_bytes, check);
+  ck_assert_int_eq(cast_result.f, check);
   ck_assert_int_eq(code, TEST_CONVERSION_OK);
 }
 

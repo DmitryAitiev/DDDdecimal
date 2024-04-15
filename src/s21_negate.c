@@ -70,9 +70,9 @@ int s21_round(s21_decimal value, s21_decimal *result) {
           drob += (int)pow(2, i);
       }
     }
-    if (drob % ((int)pow(10, scale)) >= 5) res = 1;
+    if (drob % ((int)pow(10, scale)) >= 5*pow(10, scale-1)) res = 1;
     if (res) add_one(&buf);
-    if (znak) set_bit_int(&buf.bits[3], 31, 1);
+    //if (znak) set_bit_int(&buf.bits[3], 31, 1);
 
     *result = buf;
   }

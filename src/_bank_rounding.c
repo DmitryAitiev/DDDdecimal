@@ -8,6 +8,7 @@ void _bank_rounding(s21_big_decimal* big, s21_decimal* decimal, int mod,
     myaddb(*big, one, big);
   }
   if (countLastBitbig(*big) > 95 && (*scale) > 0) {
+    mysubb(*big, one , big);
     mod = div_by_tenb(big);
     (*scale)--;
     _bank_rounding(big, decimal, mod, scale, sign);

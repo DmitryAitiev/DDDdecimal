@@ -6,17 +6,17 @@ if (scale>6) code=1;
 long double result;
 
 for(int i = 95; i >= 64; i--){
-  if (_get_bit_int(i, 2))
+  if (_get_bit_int(src.bits[2], i))
  result += pow(2, i);
 }
 
 for(int i = 63; i >= 32; i--){
-  if (_get_bit_int(i, 1))
+  if (_get_bit_int(src.bits[1], i))
  result += pow(2, i);
 }
 
 for(int i = 31; i >= 0; i--){
-  if (_get_bit_int(i, 0))
+  if (_get_bit_int(src.bits[0], i))
  result += pow(2, i);
 }
 
