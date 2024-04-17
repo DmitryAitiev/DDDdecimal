@@ -54,25 +54,51 @@ int s21_floor(s21_decimal value, s21_decimal *result) {
 
 int s21_round(s21_decimal value, s21_decimal *result) {
   int error = 0, znak = get_sign(value), scale = get_scale(value);
-  int res = 0;
+  int res = 0, count = 0;
   unsigned long long drob = 0;
   if (result == NULL) {
     error = 1;
   } else {
     s21_decimal buf = {{}};
-    if (znak) set_bit_int(&buf.bits[3], 31, 0);
     s21_truncate(value, &buf);
-
-    // if ((scale) && ((get_bit(0, scale)) >= 5)) res = 1;
-    if (scale) {
-      for (int i = scale; i >= 0; i--) {
-        if (value.bits[0] & 0b00000000000000000000000000000001 << i)
-          drob += (int)pow(2, i);
+    //if (scale) {
+    //  for (int i = scale; i >= 0; i--) {
+    //    if (value.bits[0] & 0b00000000000000000000000000000001 << i)
+    //      drob += (int)pow(2, i);
+    //  }
+    //}
+    if(scale){
+      int i = 0, j = 0;
+      while (count != scale){
+        if(j <= 31){
+        if (value.bits[0] & 0b00000000000000000000000000000001 << j){
+          drob += (int)pow(2, j);
+          i++;
+          count ++;
+        }
+        j++;
+        }
+        if (j <= 63 && j >= 32){
+          if (value.bits[1] & 0b00000000000000000000000000000001 << (j - 32)){
+          drob += (int)pow(2, j);
+          i++;
+          count ++;
+        }
+        j++;
+        }
+        if (j <= 95 && j >= 64){
+          if (value.bits[2] & 0b00000000000000000000000000000001 << (j - 64)){
+          drob += (int)pow(2, j);
+          i++;
+          count ++;
+        }
+        j++;
+        }
       }
     }
     if (drob % ((int)pow(10, scale)) >= 5*pow(10, scale-1)) res = 1;
     if (res) add_one(&buf);
-    //if (znak) set_bit_int(&buf.bits[3], 31, 1);
+    if (znak) setSign(&buf, 1);
 
     *result = buf;
   }
