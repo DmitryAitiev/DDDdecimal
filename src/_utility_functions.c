@@ -329,3 +329,17 @@ int s21_get_float_exp_from_string(char *str) {
 
   return result;
 }
+
+void my_decimal_to_big(s21_decimal val1,  s21_big_decimal* tar1){
+    tar1->bits[0]=val1.bits[0];
+    tar1->bits[1]=val1.bits[1];
+    tar1->bits[2]=val1.bits[2];
+}
+
+int zeroBigDecimal(s21_big_decimal v) {
+  int arg = 0;
+  if (!v.bits[0] && !v.bits[1] && !v.bits[2] && !v.bits[3] && !v.bits[4] &&
+      !v.bits[5])
+    arg = 1;
+  return arg;
+}

@@ -82,5 +82,5 @@ int s21_round(s21_decimal value, s21_decimal *result) {
     if (znak) set_bit(&buf.bits[3], 31, 1);
 
     *result = buf;
-    printb(*result);
+   
 }

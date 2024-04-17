@@ -70,3 +70,7 @@ style:
 
 cpp:
 	cppcheck --enable=all --suppress=missingIncludeSystem *.c
+
+medusatest:
+	gcc  *.c  -lm $(CHECK)
+	./a.out

@@ -15,6 +15,7 @@
 #define MIN_FLOAT_TO_CONVERT \
   0.00000000000000000000000000010000000031710768509710513471352647538147514756461109f
 #define MAX_BLOCK_BITS 32
+#define OK 1
 
 typedef struct {
   unsigned int bits[4];
@@ -157,5 +158,7 @@ int s21_decimal_get_empty2(s21_decimal decimal);
 int s21_decimal_is_set_bit(s21_decimal decimal, int index);
 int s21_is_set_bit(int number, int index);
 void s21_decimal_set_sign(s21_decimal *decimal, int sign);
+void my_decimal_to_big(s21_decimal val1,  s21_big_decimal* tar1);
+int zeroBigDecimal(s21_big_decimal v);
 
 #endif  // SRC_S21_DECIMAL_H_
