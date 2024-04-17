@@ -203,7 +203,7 @@ bool get_bit_valueb(s21_big_decimal target, int bit_number) {
     bit_number -= 32;
   }
 
-  bool x = 1 << bit_number & target.bits[index];
+  bool x = 1u << bit_number & target.bits[index];
   return x;
 }
 

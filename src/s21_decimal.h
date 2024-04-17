@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MINUS_SIGN 2147483648
 #define UINT_MAX 4294967295
@@ -125,6 +126,11 @@ bool get_bit_valueb(s21_big_decimal target, int bit_number);
 int countLastBitbig(s21_big_decimal d);
 void s21_set_bitb(s21_big_decimal* num, int index, int value);
 void initializeByBigZeros(s21_big_decimal *value);
+void get_float(char *part, int *scale, int *length, int *float_part);
+int myaddnormalize(s21_decimal value_1, s21_decimal value_2,
+                   s21_decimal* result);
+int mysubnormalize(s21_decimal value_1, s21_decimal value_2,
+                   s21_decimal* result);
 
 /* another functions */
 int s21_negate(s21_decimal value, s21_decimal *result);

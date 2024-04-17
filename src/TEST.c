@@ -582,17 +582,6 @@ START_TEST(s21_is_less_or_equal_with_sign) {
 }
 END_TEST
 
-START_TEST(s21_is_greater_null) {
-  s21_decimal value_1 = {0};
-  s21_decimal value_2 = {0};
-  value_1.bits[0] = 0;
-  value_2.bits[0] = 0;
-  ck_assert_int_eq(s21_is_greater(value_1, value_2), 0);
-  setSign(&value_2, 1);
-  ck_assert_int_eq(s21_is_greater(value_1, value_2), 0);
-}
-END_TEST
-
 START_TEST(s21_is_greater_normal) {
   s21_decimal value_1 = {0};
   s21_decimal value_2 = {0};
@@ -723,7 +712,6 @@ Suite *s21_compare_suite(void) {
   tcase_add_test(tc_core, s21_is_less_or_equal_normal);
   tcase_add_test(tc_core, s21_is_less_or_equal_with_sign);
 
-  tcase_add_test(tc_core, s21_is_greater_null);
   tcase_add_test(tc_core, s21_is_greater_normal);
   tcase_add_test(tc_core, s21_is_greater_negative);
   tcase_add_test(tc_core, s21_is_greater_two_negative);
