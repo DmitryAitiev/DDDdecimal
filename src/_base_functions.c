@@ -34,18 +34,6 @@ void set_scale(s21_decimal *dec, int value) {  // устанавливаем с�
   dec->bits[3] = get_bit(*dec, 127) << 31 | value << 16;
 }
 
-int get_before_scale(s21_decimal dec) { return (dec.bits[3] & 32767); }
-
-int int_add_decimal(s21_decimal dec, int a, s21_decimal *res) {
-  int error = 0;
-  s21_decimal value = {0};
-  int sign = (a < 0) ? 1 : 0;
-  if (sign) s21_negate(value, &value);
-  value.bits[0] = abs(a);
-  error = s21_add(dec, value, res);
-  return error;
-}
-
 int normalize(s21_decimal num_1, s21_decimal num_2, s21_big_decimal *big1,  s21_big_decimal *big2) {
   *big1 = mantissadecimalToBig(num_1);
   *big2 = mantissadecimalToBig(num_2);
@@ -172,18 +160,6 @@ int myaddb(s21_big_decimal value_1, s21_big_decimal value_2, s21_big_decimal *re
     }
     if(carry){error=1;}
     return error;
-}
-
-void mine_from_int_to_decimal(int src, s21_decimal *dst) {
-  if (src < 0) {
-    dst->bits[3] = 0b10000000000000000000000000000000;
-  } else {
-    dst->bits[3] = 0b00000000000000000000000000000000;
-  }
-  src = abs(src);
-  dst->bits[0] = src;
-  dst->bits[1] = 0b00000000000000000000000000000000;
-  dst->bits[2] = 0b00000000000000000000000000000000;
 }
 
 void mine_from_int_to_decimalb(int src, s21_big_decimal *dst) {

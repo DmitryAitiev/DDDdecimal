@@ -53,29 +53,34 @@ int s21_floor(s21_decimal value, s21_decimal *result) {
 }
 
 int s21_round(s21_decimal value, s21_decimal *result) {
-  int error = 0, znak = get_sign(value), scale = get_scale(value);
-  int res = 0;
-  unsigned long long drob = 0;
+  int error = 0, is_signed = 0;
+  s21_decimal buf = {{}}, copy_value = value;
   if (result == NULL) {
     error = 1;
   } else {
-    s21_decimal buf = {{}};
-    if (znak) set_bit_int(&buf.bits[3], 31, 0);
-    s21_truncate(value, &buf);
-
-    // if ((scale) && ((get_bit(0, scale)) >= 5)) res = 1;
-    if (scale) {
-      for (int i = scale; i >= 0; i--) {
-        if (value.bits[0] & 0b00000000000000000000000000000001 << i)
-          drob += (int)pow(2, i);
-      }
+    for (int i = 0; i < get_scale(value) - 1; i++) {
+      division_by_ten(copy_value, &buf);
+      copy_value = buf;
+      nullify(&buf);
     }
-    if (drob % ((int)pow(10, scale)) >= 5) res = 1;
-    if (res) add_one(&buf);
-    if (znak) set_bit_int(&buf.bits[3], 31, 1);
-
+    if (get_sign(value)) {
+      set_bit_int(&value.bits[3], 31, 0);
+      is_signed = 1;
+    }
+    if (rem_div_by_ten(copy_value) < 5) {
+      s21_floor(value, &buf);
+    } else {
+      s21_truncate(value, &buf);
+      if (get_scale(value)) add_one(&buf);
+    }
     *result = buf;
+    if (is_signed) setSign(result, 1);
+    if (!result->bits[0] && !result->bits[1] && !result->bits[2] && !is_signed)
+      result->bits[3] = 0;
+    else if (is_signed){
+      result->bits[3] = 0;
+      setSign(result, 1);
+    }
   }
-
   return error;
 }

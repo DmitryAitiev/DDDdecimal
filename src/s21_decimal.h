@@ -16,6 +16,7 @@
 #define MIN_FLOAT_TO_CONVERT \
   0.00000000000000000000000000010000000031710768509710513471352647538147514756461109f
 #define MAX_BLOCK_BITS 32
+#define MAX_UINT 4294967295 
 
 typedef struct {
   unsigned int bits[4];
@@ -90,6 +91,7 @@ void set_bit_int(unsigned int *value, int bit_number, int set_value);
 void add_one(s21_decimal *value);
 int div_by_tenb(s21_big_decimal *result);
 void _bank_rounding(s21_big_decimal* big, s21_decimal* decimal, int mod, int* scale, unsigned int sign);
+int rem_div_by_ten(s21_decimal value);
 
 /* big decimal function */
 int s21_decimal_is_zero(s21_decimal dec);
@@ -142,24 +144,5 @@ int s21_from_int_to_decimal(int src, s21_decimal *dst);
 int s21_from_float_to_decimal(float src, s21_decimal *dst);
 int s21_from_decimal_to_int(s21_decimal src, int *dst);
 int s21_from_decimal_to_float(s21_decimal src, float *dst);
-
-void s21_clear_decimal(s21_decimal *decimal);
-s21_decimal s21_decimal_get_int_min(void);
-s21_decimal s21_decimal_get_zero(void);
-s21_decimal s21_decimal_get_int_max(void);
-s21_decimal s21_decimal_get_inf(void);
-s21_decimal s21_float_string_to_decimal(char *str);
-s21_decimal s21_decimal_get_from_char(char c);
-s21_decimal s21_int128_get_ten_pow(int pow);
-s21_decimal s21_decimal_get_one(void);
-int s21_get_float_exp_from_string(char *str);
-
-int s21_is_correct_decimal(s21_decimal decimal);
-int s21_decimal_get_sign(s21_decimal decimal);
-int s21_decimal_get_power(s21_decimal decimal);
-int s21_decimal_get_empty1(s21_decimal decimal);
-int s21_decimal_get_empty2(s21_decimal decimal);
-int s21_decimal_is_set_bit(s21_decimal decimal, int index);
-int s21_is_set_bit(int number, int index);
 
 #endif  // SRC_S21_DECIMAL_H_
